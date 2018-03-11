@@ -153,9 +153,6 @@ function displayCounts(data)
 					'</div>'; 
 	
 	$('#counts_container').html(html);
-	
-	
-	console.log(data);
 	}
 
 
