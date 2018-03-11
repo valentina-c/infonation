@@ -1,7 +1,7 @@
 var debug = false; 
 var countriesLimit = 50; 
 
-var endpoint = 'http://localhost/countries_test/c_api/index.php/', rest = false;
+var endpoint = 'c_api/index.php/', rest = false;
 //var endpoint = 'https://restcountries.eu/rest/v2/', rest = true; 
 
 
