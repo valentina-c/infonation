@@ -67,7 +67,7 @@ function compareCountries($c1, $c2)
 
 function countItems($data)
 	{
-	$dataInfo = ['countries' => count($data), 'regions' => [], 'subregions' => []]; 
+	$dataInfo = ['countriesNr' => count($data), 'regions' => [], 'subregions' => []]; 
 	foreach($data as $country)
 		{
 		if(isset($dataInfo['regions'][$country->region]))

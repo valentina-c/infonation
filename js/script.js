@@ -1,8 +1,6 @@
 var debug = false; 
 var countriesLimit = 50; 
-
-var endpoint = 'c_api/index.php/', rest = false;
-//var endpoint = 'https://restcountries.eu/rest/v2/', rest = true; 
+var endpoint, rest;
 
 
 init();
@@ -10,9 +8,15 @@ init();
 
 function init()
 	{
-	
-	$('#country_keyword').on('focus', function(){$(this).select(); }); 
-	$('#submit_form').on('click', function(event)
+	 //account for the fact that this needs to be seen from github as well...
+	 if(window.location.search.indexOf('rest') > 0)
+		{ endpoint = 'https://restcountries.eu/rest/v2/', rest = true; }
+	 else
+		{ endpoint = 'c_api/index.php/', rest = false; }
+	 
+	 
+	 $('#country_keyword').on('focus', function(){$(this).select(); }); 
+	 $('#submit_form').on('click', function(event)
 										{
 										 event.preventDefault(); 
 										 
@@ -43,6 +47,15 @@ function init()
 																	 $('#cards_container').empty();
 																	 $('#counts_container').empty();
 																	 $('#counts_countries').html('0');
+																	 
+																	 if(rest)
+																		{
+																		 //no php on github... do the logic here...
+																		 if(!data.length)
+																			{ data = [data]; }
+																		 
+																		 data = doProjectLogic(data); 
+																		}
 																	 
 																	 displayData(data.countries); 
 																	 displayCounts(data.counts);
@@ -121,38 +134,87 @@ function addCard(info)
 
 function displayCounts(data)
 	{
-	$('#counts_countries').html(data.countries);
-	
-	var html = '	<div class="col-12 col-md-6">' + 
-						'<ul class="list-group">' + 
-							'<li class="list-group-item header">Regions</li>' + 
-							'<div id="counts_regions">'; 
-	for(var region in data.regions)
+	 if(data.countriesNr)
 		{
-		html += 				'<li class="list-group-item">' + 
-									'<span>' + region + '</span>' +
-									'<span class="badge badge-secondary float-right">' + data.regions[region] + '</span>' + 
-								'</li>'; 
+		$('#counts_countries').html(data.countriesNr);
 		}
-	html += '				</div>' + 
-						'</ul>' + 
-					'</div>'+ 
-					'<div class="col-12 col-md-6">' + 
-						'<ul class="list-group">' + 
-							'<li class="list-group-item header">Subregions</li>' + 
-							'<div id="counts_subregions">'; 
-	for(var subregion in data.subregions)
+	 
+	 if(data.regions)
 		{
-		html += 				'<li class="list-group-item">' + 
-									'<span>' + subregion + '</span>' +
-									'<span class="badge badge-secondary float-right">' + data.subregions[subregion] + '</span>' + 
-								'</li>'; 
+		var html = '	<div class="col-12 col-md-6">' + 
+							'<ul class="list-group">' + 
+								'<li class="list-group-item header">Regions</li>' + 
+								'<div id="counts_regions">'; 
+		for(var region in data.regions)
+			{
+			html += 				'<li class="list-group-item">' + 
+										'<span>' + region + '</span>' +
+										'<span class="badge badge-secondary float-right">' + data.regions[region] + '</span>' + 
+									'</li>'; 
+			}
+		html += '				</div>' + 
+							'</ul>' + 
+						'</div>'+ 
+						'<div class="col-12 col-md-6">' + 
+							'<ul class="list-group">' + 
+								'<li class="list-group-item header">Subregions</li>' + 
+								'<div id="counts_subregions">'; 
+		
+		for(var subregion in data.subregions)
+			{
+			html += 				'<li class="list-group-item">' + 
+										'<span>' + subregion + '</span>' +
+										'<span class="badge badge-secondary float-right">' + data.subregions[subregion] + '</span>' + 
+									'</li>'; 
+			}
+		html += '				</div>' + 
+							'</ul>' + 
+						'</div>'; 
+		
+		$('#counts_container').html(html);
 		}
-	html += '				</div>' + 
-						'</ul>' + 
-					'</div>'; 
-	
-	$('#counts_container').html(html);
+	}
+
+
+function doProjectLogic(data)
+	{
+	 var out = {}; 
+	 
+	 //sort
+	 data.sort(function(a, b)
+					{
+					 var nameComp = a.name.localeCompare(b.name); 
+					 
+					 if(nameComp == 0)						//compare population if name is same... I am not sure it is possible...
+						{ return parseFloat(a.population) - parseFloat(b.population); }
+					 else
+						{ return nameComp; }
+					});
+	 //limit
+	 data = data.slice(0, countriesLimit);
+	 
+	 out.countries = data;
+	 
+	 
+	 //find and count regions and subregions
+	 var dataInfo = { countriesNr: out.countries.length, regions: {}, subregions: {} };
+	 for(var country in data)
+		{
+		 if(dataInfo.regions[data[country].region])
+			{ dataInfo.regions[data[country].region] ++; }
+		 else
+			{ dataInfo.regions[data[country].region] = 1; }
+		 
+		 
+		 if(dataInfo.subregions[data[country].subregion])
+			{ dataInfo.subregions[data[country].subregion] ++; }
+		 else
+			{ dataInfo.subregions[data[country].subregion] = 1; }
+		}
+	 out.counts = dataInfo; 
+	 
+	 
+	 return out;
 	}
 
 
